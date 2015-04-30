@@ -2,71 +2,68 @@ module ActiveService
 
   module Hooks
 
-    def before(*args, &block)
-      options = extract_options! *args
+    def self.included(base)
+      base.class_eval do
+        extend ClassMethods
+      end
+    end
 
-      if args.first.is_a? Symbol
-        block = lambda { |*ops|
-          send(args.first, *ops)
-        }
+    module ClassMethods
+
+      def before(action, *args, &block)
+        options = extract_options! *args
+
+        if args.first.is_a? Symbol
+          block = lambda { |*ops|
+            send(args.first, *ops)
+          }
+        end
+
+        hook = { block: block }.merge options
+        before_hooks(action).push(hook)
       end
 
-      hook = { block: block }.merge options
-      before_hooks.push(hook)
-    end
+      def after(action, *args, &block)
+        options = extract_options! *args
 
-    def after(*args, &block)
-      options = extract_options! *args
+        if args.first.is_a? Symbol
+          block = lambda { |*ops|
+            send(args.first, *ops)
+          }
+        end
 
-      hook = { block: block }.merge options
-      after_hooks.unshift(hook)
-    end
+        hook = { block: block }.merge options
+        after_hooks(action).unshift(hook)
+      end
 
-    def before_hooks
-      @before_hooks ||= []
-    end
+      def before_hooks(action)
+        @before_hooks ||= {}
 
-    def after_hooks
-      @after_hooks ||= []
-    end
+        @before_hooks[action] ||= []
+      end
 
-    def run_before_hooks(*args)
-      before_hooks.each { |h| run_hook(h, *args) }
-    end
+      def after_hooks(action)
+        @after_hooks ||= {}
 
-    def run_after_hooks(*args)
-      after_hooks.each { |h| run_hook(h, *args) }
-    end
+        @after_hooks[action] ||= []
+      end
 
-    def run_hook?(hook, sym)
-      only_method?(hook, sym)
-    end
+      def run_before_hooks(obj, action)
+        before_hooks(action).each { |h| run_hook(h, obj, action) }
+      end
 
-    def only_method?(hook, method_name)
-      only_methods = hook[:only]
-      sym          = method_name.to_sym
+      def run_after_hooks(obj, action)
+        after_hooks(action).each { |h| run_hook(h, obj, action) }
+      end
 
-      (only_methods == sym) || (only_methods.is_a?(Array) && only_methods.include?(sym))
-    end
+      def run_hook(hook, obj, action)
+        obj.instance_exec(&hook[:block])
+      end
 
-    def except_method?(hook, method_name)
-      only_methods = hook[:except]
-      sym          = method_name.to_sym
+      def extract_options!(*args)
+        args.last.is_a?(::Hash) ? args.pop : {}
+      end
 
-      (only_methods != sym) || (only_methods.is_a?(Array) && !only_methods.include?(sym))
-    end
-
-    def run_hook(hook, *args)
-      method_name = args.first
-
-      return unless (!hook.has_key?(:only)   || only_method?(hook, method_name)) &&
-                    (!hook.has_key?(:except) || except_method?(hook, method_name))
-
-      instance_exec(nil, &hook[:block])
-    end
-
-    def extract_options!(*args)
-      args.last.is_a?(::Hash) ? args.pop : {}
     end
 
   end
