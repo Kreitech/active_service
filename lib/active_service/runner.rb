@@ -26,9 +26,11 @@ module ActiveService
       def run_method(sym, *args, &block)
         self.class.run_before_hooks(self, sym)
 
-        send(sym, *args, &block)
+        result = send(sym, *args, &block)
 
         self.class.run_after_hooks(self, sym)
+
+        result
       end
 
     end
