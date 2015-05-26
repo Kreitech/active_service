@@ -44,12 +44,12 @@ module ActiveService
         add_hook(:around, action, *args, &block)
       end
 
-      def run_before_hooks(obj, action)
-        before_hooks(action).each { |h| run_hook(h, obj, action) }
+      def run_before_hooks(obj, action, *args)
+        before_hooks(action).each { |h| run_hook(h, obj, *args) }
       end
 
-      def run_after_hooks(obj, action)
-        after_hooks(action).each { |h| run_hook(h, obj, action) }
+      def run_after_hooks(obj, action, *args)
+        after_hooks(action).each { |h| run_hook(h, obj, *args) }
       end
 
       def run_around_hooks(obj, action, &block)

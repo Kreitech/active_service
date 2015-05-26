@@ -24,11 +24,13 @@ module ActiveService
     module InstaceMethods
 
       def run_method(sym, *args, &block)
-        self.class.run_before_hooks(self, sym)
+        self.class.run_before_hooks(self, sym, *args)
 
-        result = send(sym, *args, &block)
+        result = self.class.run_around_hooks(self, sym) do
+          send(sym, *args, &block)
+        end
 
-        self.class.run_after_hooks(self, sym)
+        self.class.run_after_hooks(self, sym, *args)
 
         result
       end

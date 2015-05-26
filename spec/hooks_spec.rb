@@ -69,7 +69,7 @@ module ActiveService
           build_hooked do
             before :process, :pre
 
-            def pre(operation)
+            def pre
               steps << :pre
             end
           end
@@ -109,7 +109,7 @@ module ActiveService
         build_hooked do
           after :process, :post
 
-          def post(operation)
+          def post
             steps << :post
           end
         end
