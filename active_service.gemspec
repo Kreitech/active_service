@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'active_service/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "active_service"
+  spec.name          = "active-service"
   spec.version       = ActiveService::VERSION
   spec.authors       = ["Martin Fernandez", "Andres Pache"]
   spec.email         = ["fmartin91@gmail.com", "apache90@gmail.com"]
