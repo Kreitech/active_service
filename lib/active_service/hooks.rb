@@ -10,7 +10,17 @@ module ActiveService
 
     module ClassMethods
 
-      def before(action, *args, &block)
+      %W(before after around).each do |type|
+        class_eval %{
+          def #{type}_hooks(action)
+            @#{type}_hooks ||= {}
+
+            @#{type}_hooks[action] ||= []
+          end
+        }
+      end
+
+      def add_hook(type, action, *args, &block)
         options = extract_options! *args
 
         if args.first.is_a? Symbol
@@ -19,33 +29,19 @@ module ActiveService
           }
         end
 
-        hook = { block: block }.merge options
-        before_hooks(action).push(hook)
+        send("#{type}_hooks",action).push(block)
+      end
+
+      def before(action, *args, &block)
+        add_hook(:before, action, *args, &block)
       end
 
       def after(action, *args, &block)
-        options = extract_options! *args
-
-        if args.first.is_a? Symbol
-          block = lambda { |*ops|
-            send(args.first, *ops)
-          }
-        end
-
-        hook = { block: block }.merge options
-        after_hooks(action).unshift(hook)
+        add_hook(:after, action, *args, &block)
       end
 
-      def before_hooks(action)
-        @before_hooks ||= {}
-
-        @before_hooks[action] ||= []
-      end
-
-      def after_hooks(action)
-        @after_hooks ||= {}
-
-        @after_hooks[action] ||= []
+      def around(action, *args, &block)
+        add_hook(:around, action, *args, &block)
       end
 
       def run_before_hooks(obj, action)
@@ -56,8 +52,14 @@ module ActiveService
         after_hooks(action).each { |h| run_hook(h, obj, action) }
       end
 
-      def run_hook(hook, obj, action)
-        obj.instance_exec(&hook[:block])
+      def run_around_hooks(obj, action, &block)
+        around_hooks(action).inject(block) { |chain, hook|
+          proc { run_hook(hook, obj, chain) }
+        }.call
+      end
+
+      def run_hook(hook, obj, *args)
+        obj.instance_exec(*args, &hook)
       end
 
       def extract_options!(*args)
