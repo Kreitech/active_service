@@ -8,7 +8,6 @@ module ActiveService
   def self.included(base)
     base.class_eval do
       include Runner
-      include Hooks
     end
   end
 
