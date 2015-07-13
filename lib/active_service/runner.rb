@@ -26,9 +26,7 @@ module ActiveService
         options = extract_options! *args
 
         if options[:with]
-          block = lambda { |*ops|
-            send(options[:with], *ops)
-          }
+          block = lambda { |*ops| send(options[:with], *ops) }
         end
 
         rescue_blocks[operation] = { block: block }.merge(options)
@@ -38,9 +36,7 @@ module ActiveService
         options = args.last.is_a?(::Hash) ? args.pop : {}
 
         if args.first.is_a? Symbol
-          block = lambda { |*ops|
-            send(args.first, *ops)
-          }
+          block = lambda { |*ops| send(args.first, *ops) }
         end
 
         pipe_blocks(operation_name).push(block)
@@ -87,7 +83,7 @@ module ActiveService
         transformed_result = result
 
         self.class.pipe_blocks(operation_name).each do |block|
-          transformed_result = block.call(result)
+          transformed_result = block.call(transformed_result)
         end
 
         transformed_result
