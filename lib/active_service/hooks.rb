@@ -22,12 +22,23 @@ module ActiveService
 
       def add_hook(type, action, *args, &block)
         options = extract_options! *args
+        blocks = [block].compact
 
         if args.first.is_a? Symbol
-          block = lambda { |*ops| send(args.first, *ops) }
+          blocks << lambda { |*ops| send(args.first, *ops) }
         end
 
-        send("#{type}_hooks",action).push(block)
+        if args.first.is_a? Array
+          args.first.each do |block|
+            blocks << lambda { |*ops|
+              send(block, *ops)
+            }
+          end
+        end
+
+        blocks.reverse.each do |block|
+          send("#{type}_hooks",action).push(block)
+        end
       end
 
       def before(action, *args, &block)
@@ -43,11 +54,11 @@ module ActiveService
       end
 
       def run_before_hooks(obj, action, *args)
-        before_hooks(action).each { |h| run_hook(h, obj, *args) }
+        before_hooks(action).reverse.each { |h| run_hook(h, obj, *args) }
       end
 
       def run_after_hooks(obj, action, *args)
-        after_hooks(action).each { |h| run_hook(h, obj, *args) }
+        after_hooks(action).reverse.each { |h| run_hook(h, obj, *args) }
       end
 
       def run_around_hooks(obj, action, &block)
