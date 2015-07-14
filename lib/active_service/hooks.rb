@@ -24,9 +24,7 @@ module ActiveService
         options = extract_options! *args
 
         if args.first.is_a? Symbol
-          block = lambda { |*ops|
-            send(args.first, *ops)
-          }
+          block = lambda { |*ops| send(args.first, *ops) }
         end
 
         send("#{type}_hooks",action).push(block)
@@ -71,4 +69,3 @@ module ActiveService
   end
 
 end
-

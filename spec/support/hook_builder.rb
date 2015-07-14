@@ -32,4 +32,16 @@ module HookBuilder
     hooked
   end
 
+  def build_runned(&block)
+    hooked = Class.new
+
+    hooked.class_eval do
+      include ActiveService::Runner
+    end
+
+    hooked.class_eval(&block) if block
+    hooked
+  end
+
+
 end
