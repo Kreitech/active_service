@@ -1,6 +1,6 @@
-# ActiveService
+# ActiveService [![Build Status](https://travis-ci.org/bilby91/active_service.svg?branch=master)](https://travis-ci.org/bilby91/active_service) [![Code Climate](https://codeclimate.com/github/bilby91/active_service/badges/gpa.svg)](https://codeclimate.com/github/bilby91/active_service)
 
-TODO: Write a gem description
+Steroids for business clases :muscle: 
 
 ## Installation
 
