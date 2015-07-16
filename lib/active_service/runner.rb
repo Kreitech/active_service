@@ -93,7 +93,7 @@ module ActiveService
         self.class.run_before_hooks(self, sym, *args)
 
         result = self.class.run_around_hooks(self, sym) do
-          self.class.operations[sym].call(*args)
+          instance_exec(*args, &self.class.operations[sym])
         end
 
         self.class.run_after_hooks(self, sym, *args)
