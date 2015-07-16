@@ -1,6 +1,9 @@
+require 'rack/test'
+require 'json_expressions'
+
 require_relative '../lib/active_service'
 
-Dir[File.expand_path("../support/*.rb", __FILE__)].each { |f| require f }
+Dir[File.expand_path("../support/**/*.rb", __FILE__)].each { |f| require f }
 
 RSpec.configure do |config|
 

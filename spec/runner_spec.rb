@@ -18,6 +18,14 @@ module ActiveService
         expect(runned.hello).to eq('hello')
       end
 
+      context 'when using #run_operation' do
+
+        it 'runs the block' do
+          expect(runned.run_operation :hello).to eq('hello')
+        end
+
+      end
+
     end
 
     describe 'pipes' do

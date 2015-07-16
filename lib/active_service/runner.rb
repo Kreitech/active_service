@@ -12,10 +12,14 @@ module ActiveService
 
     module ClassMethods
 
+      def run_operation(operation_name, *args)
+        self.new.run_method(operation_name, *args)
+      end
+
       def method_missing(sym, *args, &block)
         obj = self.new
 
-        skip = respond_to?(sym) || obj.respond_to?(sym) || !operations.key?(sym)
+        skip = respond_to?(sym) || !operations.include?(sym)
 
         super(sym, *args, &block) if skip
 
@@ -43,11 +47,30 @@ module ActiveService
       end
 
       def operation(name, &block)
-        operations[name] = block
+        define_method name, &block
+
+        operations << name
       end
 
       def operations
-        @operations ||= {}
+        @operations ||= []
+      end
+
+      def operations_metadata
+        instance = new
+
+        metadata = {}
+        operations.each do |o|
+          method = { name: o }
+
+          method_parameters = instance.method(o).parameters
+
+          metadata[:parameters] = instance.method(o).parameters.map { |type, name|
+            { name: name, required: (type == :keyreq || type == :req) }
+          }
+        end
+
+        { name: self.to_s, operations: metadata }
       end
 
       def pipe_blocks(operation_name)
@@ -93,7 +116,7 @@ module ActiveService
         self.class.run_before_hooks(self, sym, *args)
 
         result = self.class.run_around_hooks(self, sym) do
-          instance_exec(*args, &self.class.operations[sym])
+          send(sym, *args)
         end
 
         self.class.run_after_hooks(self, sym, *args)
