@@ -1,12 +1,10 @@
 # ActiveService [![Build Status](https://travis-ci.org/bilby91/active_service.svg?branch=master)](https://travis-ci.org/bilby91/active_service) [![Code Climate](https://codeclimate.com/github/bilby91/active_service/badges/gpa.svg)](https://codeclimate.com/github/bilby91/active_service)
 
-Steroids for business clases :muscle:
+Business classes on steroids :muscle:
 
-`ActiveService` was created with the purpose of moving logic that usually live in your controller to a separate layer in charge of business logic, leaving the parameters handling, format type responses (JSON, XML, HTML, etc) and other stuff to the controller.
+`ActiveService` was created with the purpose of moving logic that usually lives in your controller to a separate layer in charge of business logic, leaving the parameters handling, format type responses (JSON, XML, HTML, etc) and other stuff to the controller.
 
-When we started migrating to this new clases we wanted some cools features that controllers had like before, around and after filters. We also wanted exception handling.
-
-`ActiveService` can help you with this :).
+When we started migrating to this new classes we wanted some cool features that controllers have like before, around and after actions. We also wanted exception handling.
 
 ## Installation
 
@@ -26,7 +24,9 @@ Or install it yourself as:
 
 ## Usage
 
-`ActiveService` defines the concept of `operation`. An operation is a method that will run some business function, for example creating a user. ActiveServices don't have state.
+`ActiveService` introduces the concept of `operation`. An operation is a method that will run some business logic, for example creating a user.
+
+__Note:__ ActiveServices don't have state.
 
 ### operation
 
@@ -34,6 +34,7 @@ An example UsersService could look like this:
 
 ```
 class UsersService
+
 	include ActiveService
 
 	# Ruby 2.1 required parameters :)
@@ -72,6 +73,8 @@ class UsersService
 
 	def send_welcome_email(user)
 		UserMailer.welcome(user).deliver_later
+
+		user
 	end
 
 end
@@ -113,7 +116,7 @@ end
 
 Plugins for services can be build really easy around this four primitives `before`, `around`, `after` and `pipe`.
 
-For example, if we want to ensure that an operation is don inside a transaction with ActiveRecord:
+For example, if we want to ensure that an operation is done inside a transaction with ActiveRecord:
 
 ```
 module ActiveService::Plugins::Database
