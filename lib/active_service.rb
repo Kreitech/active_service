@@ -1,5 +1,6 @@
 require_relative 'active_service/version'
 require_relative 'active_service/runner'
+require_relative 'active_service/metadata'
 require_relative 'active_service/hooks'
 require_relative 'active_service/plugins'
 

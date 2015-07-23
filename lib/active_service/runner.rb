@@ -6,6 +6,7 @@ module ActiveService
       base.class_eval do
         extend ClassMethods
         include InstaceMethods
+        include Metadata
         include Hooks
       end
     end
@@ -13,35 +14,23 @@ module ActiveService
     module ClassMethods
 
       def run_operation(operation_name, *args)
-        self.new.run_method(operation_name, *args)
+        new.run_method(operation_name, *args)
       end
 
       def method_missing(sym, *args, &block)
-        obj = self.new
+        super(sym, *args, &block) if respond_to?(sym) || !operations.include?(sym)
 
-        skip = respond_to?(sym) || !operations.include?(sym)
-
-        super(sym, *args, &block) if skip
-
-        obj.run_method(sym, *args, &block)
+        new.run_method(sym, *args, &block)
       end
 
-      def rescue_operation(operation, *args, &block)
-        options = extract_options! *args
-
-        if options[:with]
-          block = lambda { |*ops| send(options[:with], *ops) }
-        end
+      def rescue_operation(operation, *_args, &block)
+        block = ->(*ops) { send(options[:with], *ops) } if options[:with]
 
         rescue_blocks[operation] = { block: block }.merge(options)
       end
 
       def pipe(operation_name, *args, &block)
-        options = args.last.is_a?(::Hash) ? args.pop : {}
-
-        if args.first.is_a? Symbol
-          block = lambda { |*ops| send(args.first, *ops) }
-        end
+        block = ->(*ops) { send(args.first, *ops) } if args.first.is_a? Symbol
 
         pipe_blocks(operation_name).push(block)
       end
@@ -54,23 +43,6 @@ module ActiveService
 
       def operations
         @operations ||= []
-      end
-
-      def operations_metadata
-        instance = new
-
-        metadata = {}
-        operations.each do |o|
-          method = { name: o }
-
-          method_parameters = instance.method(o).parameters
-
-          metadata[:parameters] = instance.method(o).parameters.map { |type, name|
-            { name: name, required: (type == :keyreq || type == :req) }
-          }
-        end
-
-        { name: self.to_s, operations: metadata }
       end
 
       def pipe_blocks(operation_name)
@@ -94,12 +66,11 @@ module ActiveService
           begin
             run_hooks_and_operation(sym, *args, &block)
           rescue rescue_options[:from] => e
-            self.instance_exec(*(args << e), &rescue_options[:block])
+            instance_exec(*(args << e), &rescue_options[:block])
           end
         else
           run_hooks_and_operation(sym, *args, &block)
         end
-
       end
 
       def run_pipes(operation_name, result)
@@ -112,7 +83,7 @@ module ActiveService
         transformed_result
       end
 
-      def run_hooks_and_operation(sym, *args, &block)
+      def run_hooks_and_operation(sym, *args, &_block)
         self.class.run_before_hooks(self, sym, *args)
 
         result = self.class.run_around_hooks(self, sym) do

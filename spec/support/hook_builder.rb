@@ -3,6 +3,7 @@ module HookBuilder
   def build_hooked(&block)
     hooked = Class.new
 
+    # rubocop:disable Lint/NestedMethodDefinition
     hooked.class_eval do
       include ActiveService::Hooks
 
@@ -42,6 +43,6 @@ module HookBuilder
     hooked.class_eval(&block) if block
     hooked
   end
-
+  # rubocop:enable Lint/NestedMethodDefinition
 
 end
