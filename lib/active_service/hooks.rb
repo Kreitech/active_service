@@ -10,6 +10,10 @@ module ActiveService
 
     module ClassMethods
 
+      def hierarchy_hooks(type)
+        (superclass.respond_to?(__method__) ? superclass.send(__method__, type) : []) + send("#{type}_hooks")
+      end
+
       def before_hooks
         @before_hooks ||= []
       end
@@ -53,15 +57,15 @@ module ActiveService
       end
 
       def run_before_hooks(obj, *args)
-        before_hooks.reverse.each { |hook| run_hook(hook, obj, *args) }
+        hierarchy_hooks(:before).reverse.each { |hook| run_hook(hook, obj, *args) }
       end
 
       def run_after_hooks(obj, *args)
-        after_hooks.reverse.each { |hook| run_hook(hook, obj, *args) }
+        hierarchy_hooks(:after).reverse.each { |hook| run_hook(hook, obj, *args) }
       end
 
       def run_around_hooks(obj, &block)
-        around_hooks.inject(block) do |chain, hook|
+        hierarchy_hooks(:around).inject(block) do |chain, hook|
           proc { run_hook(hook, obj, chain) }
         end.call
       end
