@@ -8,7 +8,7 @@ module ActiveService::Plugins::Database
 
   module ClassMethods
 
-    def run_in_transaction(_operation)
+    def run_in_transaction
       around do |o|
         ActiveRecord::Base.transaction do
           o.call

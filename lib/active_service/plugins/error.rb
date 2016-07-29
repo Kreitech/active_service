@@ -14,7 +14,6 @@ module ActiveService::Plugins::Error
           o.call
         rescue error_klass => e
           instance_exec(e, &block) if block_given?
-          # yield e
         end
       end
     end
