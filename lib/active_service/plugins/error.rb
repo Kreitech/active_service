@@ -1,4 +1,4 @@
-module ActiveService::Plugins::Database
+module ActiveService::Plugins::Error
 
   def self.included(base)
     base.class_eval do
@@ -8,10 +8,12 @@ module ActiveService::Plugins::Database
 
   module ClassMethods
 
-    def run_in_transaction
+    def rescue_from(error_klass, &block)
       around do |o|
-        ActiveRecord::Base.transaction do
+        begin
           o.call
+        rescue error_klass => e
+          instance_exec(e, &block) if block_given?
         end
       end
     end

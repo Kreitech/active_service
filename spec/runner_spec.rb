@@ -1,50 +1,39 @@
 require 'spec_helper'
 
-module ActiveService
-
-  describe Runner do
-
-    describe 'operations' do
-
-      let(:runned) {
-        build_runned do
-          operation :hello do
-            'hello'
-          end
+describe ActiveService::Runner do
+  describe 'operations' do
+    let(:runned) do
+      build_runned do
+        def operation
+          'hello'
         end
-      }
-
-      it 'runs the block' do
-        expect(runned.hello).to eq('hello')
       end
-
     end
 
-    describe 'pipes' do
-
-      let(:runned) {
-        build_runned do
-          pipe :hello do |x|
-            x << 'l'
-          end
-
-          pipe :hello do |x|
-            x << 'o'
-          end
-
-          operation :hello do
-            'hel'
-          end
-
-        end
-      }
-
-      it 'calls the pipe blocks' do
-        expect(runned.hello).to eq('hello')
-      end
-
+    it 'runs the block' do
+      expect(runned.new.execute).to eq('hello')
     end
-
   end
 
+  describe 'pipes' do
+    let(:runned) do
+      build_runned do
+        pipe do |x|
+          x << 'l'
+        end
+
+        pipe do |x|
+          x << 'o'
+        end
+
+        def operation
+          'hel'
+        end
+      end
+    end
+
+    it 'calls the pipe blocks' do
+      expect(runned.new.execute).to eq('hello')
+    end
+  end
 end

@@ -12,20 +12,17 @@ module HookBuilder
         @steps = []
       end
 
-      def self.process
-        instance = new
+      def execute(*_args)
+        self.class.run_before_hooks(self)
+        self.class.run_around_hooks(self) { process }
+        self.class.run_after_hooks(self)
 
-        run_before_hooks(instance, :process)
-        run_around_hooks(instance, :process) { instance.process }
-        run_after_hooks(instance, :process)
-
-        instance.steps
+        @steps
       end
 
       def process
         steps << :process
       end
-
     end
 
     hooked.class_eval(&block) if block
@@ -42,6 +39,5 @@ module HookBuilder
     hooked.class_eval(&block) if block
     hooked
   end
-
 
 end
