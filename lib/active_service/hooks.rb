@@ -10,61 +10,60 @@ module ActiveService
 
     module ClassMethods
 
-      %W(before after around).each do |type|
-        class_eval %{
-          def #{type}_hooks(action)
-            @#{type}_hooks ||= {}
-
-            @#{type}_hooks[action] ||= []
-          end
-        }
+      def before_hooks
+        @before_hooks ||= []
       end
 
-      def add_hook(type, action, *args, &block)
-        options = extract_options! *args
+      def after_hooks
+        @after_hooks ||= []
+      end
+
+      def around_hooks
+        @around_hooks ||= []
+      end
+
+      def add_hook(type, *args, &block)
         blocks = [block].compact
 
-        if args.first.is_a? Symbol
-          blocks << lambda { |*ops| send(args.first, *ops) }
-        end
+        blocks << ->(*ops) { send(args.first, *ops) } if args.first.is_a? Symbol
 
         if args.first.is_a? Array
-          args.first.each do |block|
-            blocks << lambda { |*ops|
-              send(block, *ops)
-            }
+          args.first.each do |method|
+            blocks << lambda do |*ops|
+              send(method, *ops)
+            end
           end
         end
 
-        blocks.reverse.each do |block|
-          send("#{type}_hooks",action).push(block)
+        blocks.reverse.each do |b|
+          send("#{type}_hooks").push(b)
         end
       end
 
-      def before(action, *args, &block)
-        add_hook(:before, action, *args, &block)
+      def before(*args, &block)
+        add_hook(:before, *args, &block)
       end
 
-      def after(action, *args, &block)
-        add_hook(:after, action, *args, &block)
+      def after(*args, &block)
+        add_hook(:after, *args, &block)
       end
 
-      def around(action, *args, &block)
-        add_hook(:around, action, *args, &block)
+      def around(*args, &block)
+        add_hook(:around, *args, &block)
       end
 
-      def run_before_hooks(obj, action, *args)
-        before_hooks(action).reverse.each { |h| run_hook(h, obj, *args) }
+      def run_before_hooks(obj, *args)
+        before_hooks.reverse.each { |hook| run_hook(hook, obj, *args) }
       end
 
-      def run_after_hooks(obj, action, *args)
-        after_hooks(action).reverse.each { |h| run_hook(h, obj, *args) }
+      def run_after_hooks(obj, *args)
+        after_hooks.reverse.each { |hook| run_hook(hook, obj, *args) }
       end
 
-      def run_around_hooks(obj, action, &block)
-        around_hooks(action).inject(block) { |chain, hook|
+      def run_around_hooks(obj, &block)
+        around_hooks.inject(block) do |chain, hook|
           proc { run_hook(hook, obj, chain) }
-        }.call
+        end.call
       end
 
       def run_hook(hook, obj, *args)
